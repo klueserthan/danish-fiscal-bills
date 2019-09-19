@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from DanFinLaw.items import FinYear, Ministry, Agency
-from DanFinLaw.itemloaders import FinYearLoader, MinistryLoader, AgencyLoader
+from DanFinLaw.itemloaders import MinistryLoader, AgencyLoader #, FinYearLoader
 import re
 import sys
 
@@ -15,30 +15,34 @@ class GetPublicStaffSpider(scrapy.Spider):
     #     yield scrapy.Request(url='http://www.oes-cs.dk/bevillingslove/', callback=self.parse)
 
     def parse(self, response):
-        for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[7:9]:
+        for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[1:3]:
             # print(finanslov_int_url)
             yield response.follow(finanslov_int_url, callback=self.parse_finanslov_int)
 
     def parse_finanslov_int(self, response):
         # Heading
-        finyear_loader = FinYearLoader(item=FinYear(), response=response)
-        finyear_loader.add_css('fiscal_year', 'h1::text')
+        #finyear_loader = FinYearLoader(item=FinYear(), response=response)
+        #finyear_loader.add_css('fiscal_year', 'h1::text')
+        fiscal_year = response.css('h1::text')
 
         # Get link to final law plus start at first element
         request = scrapy.Request(
-            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=1"),
+            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=24"),
             callback=self.parse_finanslov_section
         )
 
-        request.meta['finyear_loader'] = finyear_loader
-        request.meta['ministry_loader'] = None
+        #request.meta['finyear_loader'] = finyear_loader
+        #request.meta['ministry_loader'] = None
+        request.meta['fiscal_year'] = fiscal_year
         yield request
   
     def parse_finanslov_section(self, response):
         section_title = response.xpath('body/h1/text()|body/h2/text()|body/h3/text()|body/h4/text()').get()
         section_title = "" if section_title is None else section_title
-        finyear_loader = response.meta['finyear_loader']
-        ministry_loader = response.meta['ministry_loader']
+        # finyear_loader = response.meta['finyear_loader']
+        # ministry_loader = response.meta['ministry_loader']
+        fiscal_year = response.meta['fiscal_year']
+        ministry_loader = None
 
         # print(section_title)
         
@@ -47,14 +51,16 @@ class GetPublicStaffSpider(scrapy.Spider):
             # Load finished ministry and add it to FY 
             if ministry_loader is not None:
                 ministry = ministry_loader.load_item()
+                yield ministry
                 # print(dict(ministry))
-                finyear_loader.add_value('ministries', ministry)
+                #finyear_loader.add_value('ministries', ministry)
                 ministry_loader = None
 
             # Start a new ministry
             if "inisteriet" in section_title:
                 ministry_loader = MinistryLoader(item=Ministry(), response=response)
                 ministry_loader.add_value('ministry_name', section_title)
+                ministry_loader.add_value('fiscal_year', fiscal_year)
                 # print("Created new ministry")
 
         # Add new agency
@@ -77,15 +83,16 @@ class GetPublicStaffSpider(scrapy.Spider):
             if row.xpath('img[@src="/images/right.gif"]').get() is not None:
                 followlink = arrowlist[idx+1].xpath('a/@href').get()
 
-        # yield final fiscal year
-        if followlink is None:
-            fy = finyear_loader.load_item()
-            yield fy
+        # # yield final fiscal year
+        # if followlink is None:
+        #     fy = finyear_loader.load_item()
+        #     yield fy
             
         # move on to next section
-        else:
+        if followlink is not None:
             request = scrapy.Request(url=response.urljoin(followlink), callback=self.parse_finanslov_section)
-            request.meta['finyear_loader'] = finyear_loader
-            request.meta['ministry_loader'] = ministry_loader
+            # request.meta['finyear_loader'] = finyear_loader
+            # request.meta['ministry_loader'] = ministry_loader'
+            request.meta['fiscal_year'] = fiscal_year
             yield request
             

@@ -14,6 +14,7 @@ class FinYear(scrapy.Item):
     ministries = scrapy.Field()
 
 class Ministry(scrapy.Item):
+    fiscal_year = scrapy.Field()
     ministry_name = scrapy.Field()
     agencies = scrapy.Field()
 

@@ -38,9 +38,8 @@ class StaffPipeline(object):
                 return -999
         
         try:
-            for ministry in item['ministries']:
-                for agency in ministry['agencies']:
-                    agency['agency_staff'] = get_number(agency['agency_text'])
-                    
+            for agency in item['agencies']:
+                agency['agency_staff'] = get_number(agency['agency_text'])
+            return item                 
         except Exception as e:
             raise DropItem(e)
