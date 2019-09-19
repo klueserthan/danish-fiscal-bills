@@ -1,0 +1,6 @@
+.vscode/
+DanFinLaw/__pycache__
+DanFinLaw/spiders/__pycache__
+test.json
+scrapinghub.yml
+setup.py
