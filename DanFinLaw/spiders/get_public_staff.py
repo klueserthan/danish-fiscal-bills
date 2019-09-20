@@ -27,41 +27,53 @@ class GetPublicStaffSpider(scrapy.Spider):
 
         # Get link to final law plus start at first element
         request = scrapy.Request(
-            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=24"),
+            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=1"),
             callback=self.parse_finanslov_section
         )
 
         #request.meta['finyear_loader'] = finyear_loader
-        #request.meta['ministry_loader'] = None
+        request.meta['ministry_loader'] = None
         request.meta['fiscal_year'] = fiscal_year
         yield request
   
+
     def parse_finanslov_section(self, response):
         section_title = response.xpath('body/h1/text()|body/h2/text()|body/h3/text()|body/h4/text()').get()
         section_title = "" if section_title is None else section_title
         # finyear_loader = response.meta['finyear_loader']
         # ministry_loader = response.meta['ministry_loader']
         fiscal_year = response.meta['fiscal_year']
-        ministry_loader = None
-
-        # print(section_title)
+        ministry_loader = response.meta['ministry_loader']
         
         # Add new ministry
         if re.match(r'§\s\d+', section_title):
-            # Load finished ministry and add it to FY 
-            if ministry_loader is not None:
+            # yield existing ministry and start new one
+            if "inisteriet" in section_title and ministry_loader is not None:
+                # load ministry and yield
                 ministry = ministry_loader.load_item()
                 yield ministry
-                # print(dict(ministry))
-                #finyear_loader.add_value('ministries', ministry)
-                ministry_loader = None
+                input("Ministry yielded")
 
-            # Start a new ministry
-            if "inisteriet" in section_title:
+                # New ministry loader
+                input("start new loader")
                 ministry_loader = MinistryLoader(item=Ministry(), response=response)
                 ministry_loader.add_value('ministry_name', section_title)
                 ministry_loader.add_value('fiscal_year', fiscal_year)
-                # print("Created new ministry")
+
+            elif "inisteriet" in section_title and ministry_loader is None:
+                # New ministry loader
+                input("start new loader")
+                ministry_loader = MinistryLoader(item=Ministry(), response=response)
+                ministry_loader.add_value('ministry_name', section_title)
+                ministry_loader.add_value('fiscal_year', fiscal_year)
+            
+            else:
+                # yield ministry and delete loader
+                ministry = ministry_loader.load_item()
+                yield ministry
+                input("Ministry yielded")
+                ministry_loader = None
+
 
         # Add new agency
         else:
@@ -72,9 +84,8 @@ class GetPublicStaffSpider(scrapy.Spider):
                 agency_loader.add_xpath('agency_text', 'body/pre/text()|body/pre/i/text()')
 
                 # load agency and add it to ministry
-                if ministry_loader is not None:
-                    agency = agency_loader.load_item()
-                    ministry_loader.add_value('agencies', agency)
+                agency = agency_loader.load_item()
+                ministry_loader.add_value('agencies', agency)
 
         # Follow link or yield complete FY
         followlink = None
@@ -92,7 +103,7 @@ class GetPublicStaffSpider(scrapy.Spider):
         if followlink is not None:
             request = scrapy.Request(url=response.urljoin(followlink), callback=self.parse_finanslov_section)
             # request.meta['finyear_loader'] = finyear_loader
-            # request.meta['ministry_loader'] = ministry_loader'
+            request.meta['ministry_loader'] = ministry_loader
             request.meta['fiscal_year'] = fiscal_year
             yield request
             

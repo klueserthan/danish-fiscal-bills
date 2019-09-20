@@ -1,5 +1,6 @@
 .vscode/
 DanFinLaw/__pycache__
 DanFinLaw/spiders/__pycache__
-test.json
+DanFinLaw/*.json
+*.json
 setup.py
