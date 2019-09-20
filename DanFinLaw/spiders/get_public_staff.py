@@ -15,7 +15,7 @@ class GetPublicStaffSpider(scrapy.Spider):
     #     yield scrapy.Request(url='http://www.oes-cs.dk/bevillingslove/', callback=self.parse)
 
     def parse(self, response):
-        for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[1:3]:
+        for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[1:]:
             yield response.follow(finanslov_int_url, callback=self.parse_finanslov_int)
 
     def parse_finanslov_int(self, response):
@@ -26,7 +26,7 @@ class GetPublicStaffSpider(scrapy.Spider):
 
         # Get link to final law plus start at first element
         request = scrapy.Request(
-            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=2"),
+            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=1"),
             callback=self.parse_finanslov_section
         )
 
