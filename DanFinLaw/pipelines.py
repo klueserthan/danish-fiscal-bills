@@ -32,51 +32,39 @@ class StaffPipeline(object):
 
             except:
                 return -999
-        
+ 
+
         def get_number_second(text, fy):
-            found_staff_section = False
-            found_staff_years = False
+            # Condition_id
+            process_id = 1
 
-            re_section = re.compile(r'\d+\.\s+Person')
-            re_years = re.compile(r'\d{4}')
-            lines = text.splitlines()
+            for line in text.splitlines():
+                # Get section
+                if process_id == 1:
+                    if line.strip().startswith("Personaleoplysni"):
+                        process_id += 1
 
-            for idx, line in enumerate(lines):
-                # Get data
-                if found_staff_section:
-                    if line.strip().startswith("I alt"):
-                        staff_numbers = re.findall(r'\d+', lines[idx+1])
-                        break
-                
                 # Get years
-                elif found_staff_section and found_staff_years is False:
-                    if re_years.match(line.strip()):
+                elif process_id == 2:
+                    if re.search(r'\d{4}', line):
                         staff_years = re.findall(r'\d{4}', line)
-                        found_staff_years = True
+                        process_id += 1
 
-                else:
-                    if re_section.search(line):
-                        found_staff_section = True
+                # Get staff
+                elif process_id == 3:
+                    if re.search(r'I alt \.+', line):
+                        staff_numbers = re.findall(r'\d+', line)
+                        break
 
-            # Merge years and staff numbers
+            # Output correct number
             try:
                 if len(staff_years) == len(staff_numbers):
-                    staff_dict = [
-                                {'fiscal_year': int(fy), 'staff_number': int(sn)}
-                                for fy, sn in zip(staff_years, staff_numbers)
-                            ]
-
-                    for item in staff_dict:
-                        if item['fiscal_year'] == fy:
-                            return item['staff_number']
-
+                    return int(staff_numbers[staff_years.index(str(fy))])
                 else:
                     return -999
 
             except Exception:
                 return -999
-
-
 
         try:
             for agency in item['agencies']:
@@ -90,4 +78,6 @@ class StaffPipeline(object):
             return item                 
         
         except Exception as e:
+            for agency in item['agencies']:
+                del agency['agency_text']
             raise DropItem(e)

@@ -6,6 +6,7 @@ import re
 # Define Functions
 def get_ministry_name(self, text):
     name = re.sub(r'§\s\d+\s', '', text[0])
+    name = re.sub(r'\[.*\]', '', name)
     if name is None:
         return "ERROR -- {}".format(text[0])
     else:
