@@ -11,17 +11,12 @@ class GetPublicStaffSpider(scrapy.Spider):
     #allowed_domains = ['http://www.oes-cs.dk/bevillingslove/']
     start_urls = ['http://www.oes-cs.dk/bevillingslove/']
 
-    # def start_requests(self):
-    #     yield scrapy.Request(url='http://www.oes-cs.dk/bevillingslove/', callback=self.parse)
-
     def parse(self, response):
         for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[1:]:
             yield response.follow(finanslov_int_url, callback=self.parse_finanslov_int)
 
     def parse_finanslov_int(self, response):
         # Heading
-        #finyear_loader = FinYearLoader(item=FinYear(), response=response)
-        #finyear_loader.add_css('fiscal_year', 'h1::text')
         fiscal_year = response.css('h1::text').get()
 
         # Get link to final law plus start at first element
@@ -30,7 +25,6 @@ class GetPublicStaffSpider(scrapy.Spider):
             callback=self.parse_finanslov_section
         )
 
-        #request.meta['finyear_loader'] = finyear_loader
         request.meta['ministry_loader'] = None
         request.meta['fiscal_year'] = fiscal_year
         yield request
@@ -39,8 +33,7 @@ class GetPublicStaffSpider(scrapy.Spider):
     def parse_finanslov_section(self, response):
         section_title = response.xpath('body/h1/text()|body/h2/text()|body/h3/text()|body/h4/text()').get()
         section_title = "" if section_title is None else section_title
-        # finyear_loader = response.meta['finyear_loader']
-        # ministry_loader = response.meta['ministry_loader']
+
         fiscal_year = response.meta['fiscal_year']
         ministry_loader = response.meta['ministry_loader']
         
@@ -88,11 +81,6 @@ class GetPublicStaffSpider(scrapy.Spider):
         for idx, row in enumerate(arrowlist):
             if row.xpath('img[@src="/images/right.gif"]').get() is not None:
                 followlink = arrowlist[idx+1].xpath('a/@href').get()
-
-        # # yield final fiscal year
-        # if followlink is None:
-        #     fy = finyear_loader.load_item()
-        #     yield fy
             
         # move on to next section
         if followlink is not None:
