@@ -15,7 +15,7 @@ class GetPublicStaffSpider(scrapy.Spider):
     #     yield scrapy.Request(url='http://www.oes-cs.dk/bevillingslove/', callback=self.parse)
 
     def parse(self, response):
-        for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[1:3]:
+        for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[1:]:
             # print(finanslov_int_url)
             yield response.follow(finanslov_int_url, callback=self.parse_finanslov_int)
 
