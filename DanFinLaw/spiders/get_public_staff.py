@@ -67,7 +67,7 @@ class GetPublicStaffSpider(scrapy.Spider):
                 ministry_loader.add_value('ministry_name', section_title)
                 ministry_loader.add_value('fiscal_year', fiscal_year)
             
-            else:
+            elif ministry_loader is not None:
                 # yield ministry and delete loader
                 ministry = ministry_loader.load_item()
                 yield ministry
