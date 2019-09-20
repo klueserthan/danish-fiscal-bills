@@ -18,28 +18,25 @@ class StaffPipeline(object):
             found_staff_section = False
 
             re_section = re.compile(r'\d+\.\s+Person')
-
-            for line in text.splitlines():
+            lines = text.splitlines()
+            for idx, line in enumerate(lines):
                 if found_staff_section:
                     if "Personale i alt" in line:
-                        detailsline = line
+                        staffnumber = lines[idx+1]
                 else:
                     if re_section.search(line):
                         found_staff_section = True
 
             try:
-                # split line on many spaces, information is element - 4
-                staffnumber = re.split(r'\s{2,}', detailsline)[-4]
                 return int(staffnumber)
 
-            except NameError:
-                return -999
-            except IndexError:
+            except:
                 return -999
         
         try:
             for agency in item['agencies']:
                 agency['agency_staff'] = get_number(agency['agency_text'])
+                del agency['agency_text']
             return item                 
         except Exception as e:
             raise DropItem(e)

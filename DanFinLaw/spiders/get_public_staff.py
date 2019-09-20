@@ -15,19 +15,18 @@ class GetPublicStaffSpider(scrapy.Spider):
     #     yield scrapy.Request(url='http://www.oes-cs.dk/bevillingslove/', callback=self.parse)
 
     def parse(self, response):
-        for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[1:]:
-            # print(finanslov_int_url)
+        for finanslov_int_url in response.xpath('body/form/table//a[starts-with(text(), "Finanslov for")]/@href').getall()[1:3]:
             yield response.follow(finanslov_int_url, callback=self.parse_finanslov_int)
 
     def parse_finanslov_int(self, response):
         # Heading
         #finyear_loader = FinYearLoader(item=FinYear(), response=response)
         #finyear_loader.add_css('fiscal_year', 'h1::text')
-        fiscal_year = response.css('h1::text')
+        fiscal_year = response.css('h1::text').get()
 
         # Get link to final law plus start at first element
         request = scrapy.Request(
-            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=1"),
+            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=2"),
             callback=self.parse_finanslov_section
         )
 
@@ -77,7 +76,7 @@ class GetPublicStaffSpider(scrapy.Spider):
                 agency_loader = AgencyLoader(item=Agency(), response=response)
                 agency_loader.add_value('agency_name', section_title)
                 agency_loader.add_value('agency_url', response.url)
-                agency_loader.add_xpath('agency_text', 'body/pre/text()|body/pre/i/text()')
+                agency_loader.add_xpath('agency_text', 'body/pre/text()|body/pre/i/text()|body/pre/b/text()')
 
                 # load agency and add it to ministry
                 agency = agency_loader.load_item()

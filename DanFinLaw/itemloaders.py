@@ -38,7 +38,7 @@ class MinistryLoader(ItemLoader):
 
     # fiscal_year
     fiscal_year_in = get_fy
-    fiscal_year_out = Identity()
+    fiscal_year_out = TakeFirst()
 
     # agencies
     agencies_in = agency_to_dict
