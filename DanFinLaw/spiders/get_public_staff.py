@@ -21,7 +21,7 @@ class GetPublicStaffSpider(scrapy.Spider):
 
         # Get link to final law plus start at first element
         request = scrapy.Request(
-            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=5"),
+            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=1"),
             callback=self.parse_finanslov_section
         )
 
