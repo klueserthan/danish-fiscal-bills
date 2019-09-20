@@ -52,17 +52,14 @@ class GetPublicStaffSpider(scrapy.Spider):
                 # load ministry and yield
                 ministry = ministry_loader.load_item()
                 yield ministry
-                input("Ministry yielded")
 
                 # New ministry loader
-                input("start new loader")
                 ministry_loader = MinistryLoader(item=Ministry(), response=response)
                 ministry_loader.add_value('ministry_name', section_title)
                 ministry_loader.add_value('fiscal_year', fiscal_year)
 
             elif "inisteriet" in section_title and ministry_loader is None:
                 # New ministry loader
-                input("start new loader")
                 ministry_loader = MinistryLoader(item=Ministry(), response=response)
                 ministry_loader.add_value('ministry_name', section_title)
                 ministry_loader.add_value('fiscal_year', fiscal_year)
@@ -71,7 +68,6 @@ class GetPublicStaffSpider(scrapy.Spider):
                 # yield ministry and delete loader
                 ministry = ministry_loader.load_item()
                 yield ministry
-                input("Ministry yielded")
                 ministry_loader = None
 
 
