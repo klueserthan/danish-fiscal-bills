@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from DanFinLaw.items import FinYear, Ministry, Agency
-from DanFinLaw.itemloaders import MinistryLoader, AgencyLoader #, FinYearLoader
+from DanFinLaw.itemloaders import MinistryLoader, AgencyLoader, get_fy
 import re
 import sys
 
@@ -18,9 +18,9 @@ class GetPublicStaffSpider(scrapy.Spider):
     def parse_finanslov_int(self, response):
         # Heading
         fiscal_year = response.css('h1::text').get()
-
-        if fiscal_year in ["1997", "1999", "2002", "2006", "2008"]:
-
+        print(fiscal_year)
+        if get_fy(None, [fiscal_year]) in [1997, 1999, 2002, 2006, 2008]:
+            input(fiscal_year)
             # Get link to final law plus start at first element
             request = scrapy.Request(
                 url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=1"),
