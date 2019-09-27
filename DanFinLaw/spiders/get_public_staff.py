@@ -19,15 +19,17 @@ class GetPublicStaffSpider(scrapy.Spider):
         # Heading
         fiscal_year = response.css('h1::text').get()
 
-        # Get link to final law plus start at first element
-        request = scrapy.Request(
-            url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=1"),
-            callback=self.parse_finanslov_section
-        )
+        if fiscal_year in ["1997", "1999", "2002", "2006", "2008"]:
 
-        request.meta['ministry_loader'] = None
-        request.meta['fiscal_year'] = fiscal_year
-        yield request
+            # Get link to final law plus start at first element
+            request = scrapy.Request(
+                url=response.urljoin(response.xpath('.//pre/a[@href]/@href').getall()[-1] + "&topic=1"),
+                callback=self.parse_finanslov_section
+            )
+
+            request.meta['ministry_loader'] = None
+            request.meta['fiscal_year'] = fiscal_year
+            yield request
   
 
     def parse_finanslov_section(self, response):
