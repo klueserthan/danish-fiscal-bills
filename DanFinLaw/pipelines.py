@@ -53,7 +53,7 @@ class StaffPipeline(object):
                 # Get staff
                 elif process_id == 3:
                     if re.search(r'I alt \.+', line):
-                        staff_numbers = re.findall(r'\d+', line)
+                        staff_numbers = re.findall(r'\d+', line.replace(".", ""))
                         break
 
             # Output correct number
