@@ -29,7 +29,6 @@ class GetPublicStaffSpider(scrapy.Spider):
             request.meta['ministry_loader'] = None
             request.meta['fiscal_year'] = fiscal_year
             yield request
-  
 
     def parse_finanslov_section(self, response):
         section_title = response.xpath('body/h1/text()|body/h2/text()|body/h3/text()|body/h4/text()').get()

@@ -14,26 +14,6 @@ class DanfinlawPipeline(object):
 
 class StaffPipeline(object):
     def process_item(self, item, spider):
-        def get_number_first(text):
-            found_staff_section = False
-
-            re_section = re.compile(r'\d+\.\s+Person')
-            lines = text.splitlines()
-            for idx, line in enumerate(lines):
-                if found_staff_section:
-                    if "Personale i alt" in line:
-                        staffnumber = lines[idx+1]
-                else:
-                    if re_section.search(line):
-                        found_staff_section = True
-
-            try:
-                return int(staffnumber)
-
-            except:
-                return -999
- 
-
         def get_number_second(text, fy):
             # Condition_id
             process_id = 1
@@ -41,7 +21,7 @@ class StaffPipeline(object):
             for line in text.splitlines():
                 # Get section
                 if process_id == 1:
-                    if line.strip().startswith("Personaleoplysni"):
+                    if re.search(r'Personaleoplysni|\.\sPerson', line.strip()):
                         process_id += 1
 
                 # Get years
@@ -52,8 +32,10 @@ class StaffPipeline(object):
 
                 # Get staff
                 elif process_id == 3:
-                    if re.search(r'I alt \.+', line):
-                        staff_numbers = re.findall(r'\d+|-', line.replace(".", ""))
+                    #if re.search(r'I alt \.+', line):
+                    line = line.replace(".", "").strip()
+                    if re.search(r'\s\d+\s', line):
+                        staff_numbers = re.findall(r'(?<=\s)\d+|-', line.replace(".", "").strip())
                         break
 
             # Output correct number
@@ -66,13 +48,40 @@ class StaffPipeline(object):
             except Exception:
                 return -999
 
+
+        def get_number_2008(text, fy=2008):
+            # Condition_id
+            process_id = 1
+
+            for line in text.splitlines():
+                # Get section
+                if process_id == 1:
+                    if re.search(r'Personaleoplysni|\.\sPerson', line.strip()):
+                        process_id += 1
+
+                # Get years
+                elif process_id == 2:
+                    if str(fy) in line:
+                        process_id += 1
+
+                # Get staff
+                elif process_id == 3:
+                    line = line.replace(".", "").strip()
+                    if re.match(r'(?<!.)\d+(?!.)', line):
+                        try:
+                            return int(line)
+                        except ValueError:
+                            return -999
+        
         try:
             for agency in item['agencies']:
-                agency_staff = get_number_first(agency['agency_text'])
-                if agency_staff == -999:
-                    agency['agency_staff'] = get_number_second(agency['agency_text'], item.get('fiscal_year'))
+                if item.get('fiscal_year') < 2008:
+                    agency['agency_staff'] = get_number_second(
+                        agency['agency_text'],
+                        item.get('fiscal_year')
+                    )
                 else:
-                    agency['agency_staff'] = agency_staff
+                    agency["agency_staff"] = get_number_2008(agency["agency_text"])
                 
                 del agency['agency_text']
             return item                 
