@@ -80,6 +80,9 @@ class StaffPipeline(object):
                         agency['agency_text'],
                         item.get('fiscal_year')
                     )
+                    
+                    if agency['agency_staff'] == -999:
+                        agency["agency_staff"] = get_number_2008(agency["agency_text"], fy=item.get('fiscal_year'))
                 else:
                     agency["agency_staff"] = get_number_2008(agency["agency_text"])
                 
